@@ -29,7 +29,7 @@ const TextEditor = ({
   setUsername,
 }: {
   documentId: string | undefined;
-  username: string | undefined;
+  username: string ;
   setUsername: React.Dispatch<React.SetStateAction<string | undefined>>;
 }) => {
   const socketRef = useRef<Socket | null>(null);
@@ -76,7 +76,6 @@ const TextEditor = ({
     localStorage.setItem("userId", userId);
     localStorage.setItem("username", username);
 
-    // Create editor model with userId
     setEditor(new EditorDataModel(userId, documentId));
   }, [documentId]);
 
@@ -214,15 +213,17 @@ const TextEditor = ({
 
   const applyOperation = (operation: TextOperation) => {
     if (!editor) return;
-
+  
     if (operation.type === "insert" && operation.character) {
       editor.insertChar(operation.character, operation.position, false);
     } else if (operation.type === "delete") {
       editor.deleteChar(operation.position, false);
     }
-
+  
     setText(editor.getTextwithAllCursors(otherCursors));
-  };
+    
+    emitCursorPosition();
+  }
 
   const emitCursorPosition = () => {
     if (!editor) return;
@@ -265,6 +266,7 @@ const TextEditor = ({
             position: currentPosition - 1,
             userId,
           });
+          emitCursorPosition();
         }
         break;
 
@@ -320,6 +322,7 @@ const TextEditor = ({
           try {
             const pastedText = await navigator.clipboard.readText();
             handlePasteString(pastedText);
+            emitCursorPosition();
           } catch (err) {
             console.error("Clipboard access denied", err);
           }
@@ -336,6 +339,8 @@ const TextEditor = ({
             character: key,
             userId,
           });
+
+          emitCursorPosition();
         }
     }
 

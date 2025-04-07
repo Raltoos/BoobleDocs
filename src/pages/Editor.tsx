@@ -8,7 +8,7 @@ const Editor = () => {
   const navigate = useNavigate();
   const [editingTitle, setEditingTitle] = useState(false);
   const [title, setTitle] = useState("Untitled Document");
-  const [username, setUsername] = useState<string | undefined>("");
+  const [username, setUsername] = useState<string>("");
   const titleInputRef = useRef<HTMLInputElement | null>(null);
 
   const fetchDocumentTitle = async () => {

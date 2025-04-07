@@ -173,10 +173,11 @@ export class EditorDataModel {
   getTextwithAllCursors(otherCursors: CursorPosition[]): string {
     const text = this.getRawText();
 
-    const allCursors = [
-      ...otherCursors,
-      { userId: this.userId, position: this.cursor_position, color: "" },
-    ];
+    // const allCursors = [
+    //   ...otherCursors,
+    //   { userId: this.userId, position: this.cursor_position, color: "" },
+    // ];
+    const allCursors = [...otherCursors];
 
     allCursors.sort((a, b) => b.position - a.position);
 
@@ -191,10 +192,10 @@ export class EditorDataModel {
         cursorHTML =
           "<span class='cursor blink' style='width: 2px; height: 18px; background-color: black; display: inline-block; vertical-align: middle; animation: blink 1s step-end infinite;'></span>";
       } else {
-        const userName = cursor.userId.split("-")[0];
+        const userName = cursor.username || "User";
         cursorHTML = `<span class='other-cursor' style='position: relative; width: 2px; height: 18px; background-color: ${cursor.color}; display: inline-block; vertical-align: middle;'>
-          <span style='position: absolute; top: -18px; left: -2px; background-color: ${cursor.color}; color: white; font-size: 0.7rem; padding: 0px 3px; border-radius: 2px; white-space: nowrap;'>${userName}</span>
-        </span>`;
+  <span style='position: absolute; top: -18px; left: -2px; background-color: ${cursor.color}; color: white; font-size: 0.7rem; padding: 0px 3px; border-radius: 2px; white-space: nowrap; opacity: 1;'>${userName}</span>
+</span>`;
       }
 
       result = result.slice(0, position) + cursorHTML + result.slice(position);
