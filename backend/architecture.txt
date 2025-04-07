@@ -1,0 +1,11 @@
+ROUTES - user routes - register, login, logout
+       - document routes - new, get, getAll, share
+
+REDIS storage items - doc:id - doc with particular id
+                    - perm:doc_id:user_id - permission of a doc to particular u_id
+                    - user:user_id - user data of particular id
+                    - doc:list - list of all docs 
+
+MOST THINGS IN MONOGDB
+REDIS -> cache the sessions and the documents only the ones which are being edited for fast access
+while queued for storage in monogDB
