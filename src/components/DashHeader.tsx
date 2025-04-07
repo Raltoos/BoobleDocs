@@ -22,7 +22,7 @@ const DashHeader = ({ username }: { username: string | null }) => {
   }
 
   return (
-    <div className="w-full flex flex-col items-center mt-2">
+    <div className="w-full flex flex-col items-center mt-2 overflow-x-hidden">
       <div className="w-full flex items-center justify-between px-10">
         <div className="flex gap-3 items-center">
           <img src={logo} alt="google docs logo" className="w-[45px]" />

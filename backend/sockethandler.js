@@ -198,15 +198,63 @@ const socketHandler = (io) => {
             }
         });
 
-        // Share document with other users (from socket)
+        // // Share document with other users (from socket)
+        // socket.on("share-document", async ({ documentId, username, access }) => {
+        //     try {
+        //         const socketInfo = await redisClient.hGetAll(`socket:${socket.id}`);
+        //         if (!socketInfo || !socketInfo.userId) return;
+
+        //         // Call the sharing API endpoint
+        //         const targetUser = await User.findOne({ username });
+        //         console.log(targetUser);
+        //         if (!targetUser) {
+        //             socket.emit("share-result", {
+        //                 success: false,
+        //                 message: "User not found"
+        //             });
+        //             return;
+        //         }
+
+        //         const permission = new Permission({
+        //             docId: documentId,
+        //             userId: targetUser.userId,
+        //             access
+        //         });
+
+        //         await permission.save();
+
+        //         // Check if user has admin permission (should be done through an API call)
+        //         // For now we'll assume they do
+
+        //         // Emit event to notify the user that sharing was successful
+        //         socket.emit("share-result", {
+        //             success: true,
+        //             username,
+        //             access,
+        //             message: `Document shared with ${username}`
+        //         });
+
+        //         // Notify the target user if they're online and viewing documents list
+        //         io.to(`user:${targetUser.userId}`).emit("document-shared", {
+        //             documentId,
+        //             sharedBy: socketInfo.username
+        //         });
+        //     } catch (error) {
+        //         console.error("Error sharing document through socket:", error);
+        //         socket.emit("share-result", {
+        //             success: false,
+        //             message: "Failed to share document"
+        //         });
+        //     }
+        // });
+
         socket.on("share-document", async ({ documentId, username, access }) => {
             try {
                 const socketInfo = await redisClient.hGetAll(`socket:${socket.id}`);
                 if (!socketInfo || !socketInfo.userId) return;
 
-                // Call the sharing API endpoint
+                // Find the target user to share with
                 const targetUser = await User.findOne({ username });
-                console.log(targetUser);
                 if (!targetUser) {
                     socket.emit("share-result", {
                         success: false,
@@ -215,16 +263,15 @@ const socketHandler = (io) => {
                     return;
                 }
 
-                const permission = new Permission({
-                    docId: documentId,
-                    userId: targetUser.userId,
-                    access
-                });
-
-                await permission.save();
-
-                // Check if user has admin permission (should be done through an API call)
-                // For now we'll assume they do
+                // Update existing permission or insert a new one using upsert
+                const permission = await Permission.findOneAndUpdate(
+                    { docId: documentId, userId: targetUser.userId },
+                    {
+                        $set: { access },
+                        $setOnInsert: { docId: documentId, userId: targetUser.userId }
+                    },
+                    { upsert: true, new: true }
+                );
 
                 // Emit event to notify the user that sharing was successful
                 socket.emit("share-result", {
@@ -234,11 +281,17 @@ const socketHandler = (io) => {
                     message: `Document shared with ${username}`
                 });
 
-                // Notify the target user if they're online and viewing documents list
+                // Notify the target user if they're online and viewing their documents list
                 io.to(`user:${targetUser.userId}`).emit("document-shared", {
                     documentId,
                     sharedBy: socketInfo.username
                 });
+                // Server: after updating permission
+                io.to(`user:${targetUser.userId}`).emit("permission-update", {
+                    userId: targetUser.userId,
+                    permission: access,  // The new permission, e.g. "write"
+                });
+
             } catch (error) {
                 console.error("Error sharing document through socket:", error);
                 socket.emit("share-result", {

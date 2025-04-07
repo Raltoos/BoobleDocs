@@ -31,7 +31,7 @@ const Wrapper = () => {
   }, []);
 
   return (
-    <div>
+    <div className="overflow-x-hidden">
       {location.pathname === "/app" && <DashHeader username={username} />}
       <Outlet />
     </div>

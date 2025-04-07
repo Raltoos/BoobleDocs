@@ -25,17 +25,17 @@ const checkDocumentPermission = async (req, res, next) => {
         console.log(`Checking permissions for user ${userId} on document ${documentId}`);
 
         // First check Redis for permissions
-        const permKey = `perm:${documentId}:${userId}`;
-        const redisPerm = await redisClient.hGetAll(permKey);
+        // const permKey = `perm:${documentId}:${userId}`;
+        // const redisPerm = await redisClient.hGetAll(permKey);
 
-        if (redisPerm && Object.keys(redisPerm).length > 0 && redisPerm.access) {
-            // Permission found in Redis
-            console.log(`Found cached permission: ${redisPerm.access}`);
-            req.userPermission = redisPerm.access;
-            return next();
-        }
+        // if (redisPerm && Object.keys(redisPerm).length > 0 && redisPerm.access) {
+        //     // Permission found in Redis
+        //     console.log(`Found cached permission: ${redisPerm.access}`);
+        //     req.userPermission = redisPerm.access;
+        //     return next();
+        // }
 
-        console.log('No cached permission, checking database');
+        // console.log('No cached permission, checking database');
         // If not in Redis, check MongoDB
         const permission = await Permission.findOne({ docId: documentId, userId });
 
@@ -46,12 +46,12 @@ const checkDocumentPermission = async (req, res, next) => {
 
         console.log(`Found database permission: ${permission.access}`);
         // Cache permission in Redis
-        await redisClient.hSet(permKey, {
-            access: permission.access
-        });
+        // await redisClient.hSet(permKey, {
+        //     access: permission.access
+        // });
 
         // Set TTL for permission cache (12 hours)
-        await redisClient.expire(permKey, 43200);
+        // await redisClient.expire(permKey, 43200);
 
         // Store permission in request object for later use
         req.userPermission = permission.access;
@@ -133,31 +133,31 @@ router.get("/:id", isAuthenticated, checkDocumentPermission, async (req, res) =>
         
         console.log(`Fetching document ${documentId} for user ${userId}`);
 
-        // First check Redis
-        const docData = await redisClient.hGetAll(`doc:${documentId}`);
+        // // First check Redis
+        // const docData = await redisClient.hGetAll(`doc:${documentId}`);
 
-        if (docData && Object.keys(docData).length > 0) {
-            console.log('Document found in Redis cache');
-            // Parse cursors from JSON
-            let cursors = [];
-            try {
-                if (docData.cursors) {
-                    cursors = JSON.parse(docData.cursors);
-                }
-            } catch (e) {
-                console.error("Error parsing cursors:", e);
-            }
+        // if (docData && Object.keys(docData).length > 0) {
+        //     console.log('Document found in Redis cache');
+        //     // Parse cursors from JSON
+        //     let cursors = [];
+        //     try {
+        //         if (docData.cursors) {
+        //             cursors = JSON.parse(docData.cursors);
+        //         }
+        //     } catch (e) {
+        //         console.error("Error parsing cursors:", e);
+        //     }
 
-            return res.json({
-                docId: documentId,
-                content: docData.content || '',
-                cursors: cursors,
-                title: docData.title || 'Untitled Document',
-                permission: req.userPermission
-            });
-        }
+        //     return res.json({
+        //         docId: documentId,
+        //         content: docData.content || '',
+        //         cursors: cursors,
+        //         title: docData.title || 'Untitled Document',
+        //         permission: req.userPermission
+        //     });
+        // }
 
-        console.log('Document not in cache, fetching from database');
+        // console.log('Document not in cache, fetching from database');
         const doc = await Document.findOne({ docId: documentId });
 
         if (!doc) {
@@ -166,15 +166,15 @@ router.get("/:id", isAuthenticated, checkDocumentPermission, async (req, res) =>
         }
 
         console.log('Document found in database, caching in Redis');
-        await redisClient.hSet(`doc:${documentId}`, {
-            docId: documentId,
-            title: doc.title,
-            content: doc.content,
-            cursors: JSON.stringify([]),
-            createdBy: doc.createdBy,
-            createdAt: doc.createdAt.getTime(),
-            updatedAt: doc.updatedAt.getTime()
-        });
+        // await redisClient.hSet(`doc:${documentId}`, {
+        //     docId: documentId,
+        //     title: doc.title,
+        //     content: doc.content,
+        //     cursors: JSON.stringify([]),
+        //     createdBy: doc.createdBy,
+        //     createdAt: doc.createdAt.getTime(),
+        //     updatedAt: doc.updatedAt.getTime()
+        // });
 
         res.json({
             docId: documentId,
@@ -243,7 +243,53 @@ router.get("/", isAuthenticated, async (req, res) => {
     }
 });
 
-// Share document with another user
+// // Share document with another user
+// router.post("/:id/share", isAuthenticated, checkDocumentPermission, isAdmin, async (req, res) => {
+//     try {
+//         const documentId = req.params.id;
+//         const { username, access } = req.body;
+
+//         if (!username || !access) {
+//             return res.status(400).json({ message: 'Username and access level are required' });
+//         }
+
+//         if (!['read', 'write', 'admin'].includes(access)) {
+//             return res.status(400).json({ message: 'Invalid access level' });
+//         }
+
+//         // Find user to share with
+//         const targetUser = await User.findOne({ username });
+
+//         if (!targetUser) {
+//             return res.status(404).json({ message: 'User not found' });
+//         }
+
+//         // Add or update permission in MongoDB
+//         const permission = await Permission.findOneAndUpdate(
+//             { docId: documentId, userId: targetUser.userId },
+//             { access },
+//             { upsert: true, new: true }
+//         );
+
+//         // Update Redis permission cache
+//         await redisClient.hSet(`perm:${documentId}:${targetUser.userId}`, {
+//             access
+//         });
+
+//         // Invalidate documents list cache for the target user
+//         await redisClient.del(`documents:user:${targetUser.userId}`);
+
+//         res.json({ 
+//             message: `Document shared with ${username}`,
+//             username,
+//             access
+//         });
+//     } catch (error) {
+//         console.error('Error sharing document:', error);
+//         res.status(500).json({ error: error.message });
+//     }
+// });
+
 router.post("/:id/share", isAuthenticated, checkDocumentPermission, isAdmin, async (req, res) => {
     try {
         const documentId = req.params.id;
@@ -259,23 +305,22 @@ router.post("/:id/share", isAuthenticated, checkDocumentPermission, isAdmin, asy
 
         // Find user to share with
         const targetUser = await User.findOne({ username });
-
         if (!targetUser) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Add or update permission in MongoDB
+        // Use update operators to update the permission document or insert a new one if not found
         const permission = await Permission.findOneAndUpdate(
             { docId: documentId, userId: targetUser.userId },
-            { access },
+            {
+                $set: { access },
+                $setOnInsert: { docId: documentId, userId: targetUser.userId }
+            },
             { upsert: true, new: true }
         );
 
         // Update Redis permission cache
-        await redisClient.hSet(`perm:${documentId}:${targetUser.userId}`, {
-            access
-        });
-
+        await redisClient.hSet(`perm:${documentId}:${targetUser.userId}`, { access });
         // Invalidate documents list cache for the target user
         await redisClient.del(`documents:user:${targetUser.userId}`);
 
@@ -289,6 +334,7 @@ router.post("/:id/share", isAuthenticated, checkDocumentPermission, isAdmin, asy
         res.status(500).json({ error: error.message });
     }
 });
+
 
 // Update document title or content
 router.put("/:id", isAuthenticated, checkDocumentPermission, async (req, res) => {

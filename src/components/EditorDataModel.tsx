@@ -173,11 +173,11 @@ export class EditorDataModel {
   getTextwithAllCursors(otherCursors: CursorPosition[]): string {
     const text = this.getRawText();
 
-    // const allCursors = [
-    //   ...otherCursors,
-    //   { userId: this.userId, position: this.cursor_position, color: "" },
-    // ];
-    const allCursors = [...otherCursors];
+    const allCursors = [
+      ...otherCursors,
+      { userId: this.userId, position: this.cursor_position, color: "" },
+    ];
+    // const allCursors = [...otherCursors];
 
     allCursors.sort((a, b) => b.position - a.position);
 

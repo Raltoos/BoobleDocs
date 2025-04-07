@@ -29,7 +29,7 @@ const TextEditor = ({
   setUsername,
 }: {
   documentId: string | undefined;
-  username: string ;
+  username: string;
   setUsername: React.Dispatch<React.SetStateAction<string | undefined>>;
 }) => {
   const socketRef = useRef<Socket | null>(null);
@@ -85,28 +85,140 @@ const TextEditor = ({
     }
   }, [editor?.cursor_position, otherCursors, editor]);
 
+  // useEffect(() => {
+  //   if (!editor || !userId) return;
+
+  //   const initializeEditor = async () => {
+  //     try {
+  //       setIsLoading(true);
+
+  //       // Socket connection
+  //       socketRef.current = io("http://localhost:3000");
+
+  //       setupSocketHandlers();
+  //       const response = await fetch(
+  //         `http://localhost:3000/doc/${documentId}`,
+  //         {
+  //           credentials: "include",
+  //         }
+  //       );
+
+  //       if (!response.ok) {
+  //         throw new Error(`Failed to fetch document: ${response.status}`);
+  //       }
+
+  //       const data = await response.json();
+  //       console.log(data);
+
+  //       editor.setText(data.content || "");
+  //       setTitle(data.title || "Untitled Document");
+  //       setPermission(data.permission || "read");
+
+  //       // Set initial cursors from server
+  //       if (data.cursors && Array.isArray(data.cursors)) {
+  //         setOtherCursors(data.cursors.filter((c) => c.userId !== userId));
+  //       }
+
+  //       documentLoadedRef.current = true;
+
+  //       processQueuedOperations();
+  //       emitCursorPosition();
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       console.error("Error initializing editor:", error);
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   const setupSocketHandlers = () => {
+  //     const socket = socketRef.current;
+  //     if (!socket) return;
+
+  //     // Connection events
+  //     socket.on("connect", () => {
+  //       // Join document room
+  //       socket.emit("join-document", {
+  //         documentId,
+  //         userId,
+  //         username,
+  //         color: userColor,
+  //       });
+  //     });
+
+  //     // Document state event - initial load
+  //     socket.on("document-state", (data) => {
+  //       if (data.content) {
+  //         editor.setText(data.content);
+  //       }
+  //       if (data.title) {
+  //         setTitle(data.title);
+  //       }
+  //       if (data.cursors) {
+  //         setOtherCursors(data.cursors.filter((c) => c.userId !== userId));
+  //       }
+  //     });
+
+  //     // Listen for text operations from other users
+  //     socket.on("text-operation", (operation: TextOperation) => {
+  //       if (operation.userId !== userId) {
+  //         // If document isn't loaded yet, queue the operation
+  //         if (!documentLoadedRef.current) {
+  //           operationsQueueRef.current.push(operation);
+  //           return;
+  //         }
+
+  //         applyOperation(operation);
+  //       }
+  //     });
+
+  //     // Listen for cursor updates from other users
+  //     socket.on("cursor-update", (cursors: CursorPosition[]) => {
+  //       setOtherCursors(cursors.filter((c) => c.userId !== userId));
+  //     });
+
+  //     // Listen for share results
+  //     socket.on("share-result", (result) => {
+  //       if (result.success) {
+  //         setShareStatus(`Successfully shared with ${result.username}`);
+  //         setTimeout(() => setIsShareDialogOpen(false), 2000);
+  //       } else {
+  //         setShareStatus(`Error: ${result.message}`);
+  //       }
+  //     });
+
+  //     // Session expired notification
+  //     socket.on("session-expired", () => {
+  //       alert("Your session was opened in another window");
+  //     });
+  //   };
+
+  //   initializeEditor();
+
+  //   return () => {
+  //     if (socketRef.current) {
+  //       socketRef.current.disconnect();
+  //     }
+  //   };
+  // }, [documentId, editor, userId, userColor]);
+
   useEffect(() => {
     if (!editor || !userId) return;
 
     const initializeEditor = async () => {
       try {
         setIsLoading(true);
-
-        // Socket connection
         socketRef.current = io("http://localhost:3000");
-
         setupSocketHandlers();
+
         const response = await fetch(
           `http://localhost:3000/doc/${documentId}`,
           {
             credentials: "include",
           }
         );
-
         if (!response.ok) {
           throw new Error(`Failed to fetch document: ${response.status}`);
         }
-
         const data = await response.json();
         console.log(data);
 
@@ -114,13 +226,11 @@ const TextEditor = ({
         setTitle(data.title || "Untitled Document");
         setPermission(data.permission || "read");
 
-        // Set initial cursors from server
         if (data.cursors && Array.isArray(data.cursors)) {
           setOtherCursors(data.cursors.filter((c) => c.userId !== userId));
         }
 
         documentLoadedRef.current = true;
-
         processQueuedOperations();
         emitCursorPosition();
         setIsLoading(false);
@@ -134,9 +244,7 @@ const TextEditor = ({
       const socket = socketRef.current;
       if (!socket) return;
 
-      // Connection events
       socket.on("connect", () => {
-        // Join document room
         socket.emit("join-document", {
           documentId,
           userId,
@@ -145,7 +253,6 @@ const TextEditor = ({
         });
       });
 
-      // Document state event - initial load
       socket.on("document-state", (data) => {
         if (data.content) {
           editor.setText(data.content);
@@ -153,30 +260,29 @@ const TextEditor = ({
         if (data.title) {
           setTitle(data.title);
         }
+        if (data.permission) {
+          setPermission(data.permission);
+        }
         if (data.cursors) {
           setOtherCursors(data.cursors.filter((c) => c.userId !== userId));
         }
       });
 
-      // Listen for text operations from other users
       socket.on("text-operation", (operation: TextOperation) => {
         if (operation.userId !== userId) {
-          // If document isn't loaded yet, queue the operation
           if (!documentLoadedRef.current) {
             operationsQueueRef.current.push(operation);
             return;
           }
-
           applyOperation(operation);
         }
       });
 
-      // Listen for cursor updates from other users
       socket.on("cursor-update", (cursors: CursorPosition[]) => {
         setOtherCursors(cursors.filter((c) => c.userId !== userId));
       });
 
-      // Listen for share results
+      // Listen for share results (for the sharer)
       socket.on("share-result", (result) => {
         if (result.success) {
           setShareStatus(`Successfully shared with ${result.username}`);
@@ -186,7 +292,13 @@ const TextEditor = ({
         }
       });
 
-      // Session expired notification
+      // NEW: Listen for permission updates (for the target)
+      socket.on("permission-update", (data) => {
+        if (data.userId === userId && data.permission) {
+          setPermission(data.permission);
+        }
+      });
+
       socket.on("session-expired", () => {
         alert("Your session was opened in another window");
       });
@@ -213,17 +325,17 @@ const TextEditor = ({
 
   const applyOperation = (operation: TextOperation) => {
     if (!editor) return;
-  
+
     if (operation.type === "insert" && operation.character) {
       editor.insertChar(operation.character, operation.position, false);
     } else if (operation.type === "delete") {
       editor.deleteChar(operation.position, false);
     }
-  
+
     setText(editor.getTextwithAllCursors(otherCursors));
-    
+
     emitCursorPosition();
-  }
+  };
 
   const emitCursorPosition = () => {
     if (!editor) return;
@@ -463,7 +575,7 @@ const TextEditor = ({
         onKeyDown={handleKeyDown}
         onClick={handleClick}
         onPaste={handlePaste}
-        className={`w-full h-full min-h-64 p-5 bg-white border-gray-300 font-mono text-base focus:outline-none overflow-auto caret-transparent ${
+        className={`w-full h-full overflow-x-hidden min-h-64 p-5 bg-white border-gray-300 font-mono text-base focus:outline-none overflow-auto caret-transparent ${
           permission === "read" ? "cursor-default bg-gray-50" : ""
         }`}
         style={{
