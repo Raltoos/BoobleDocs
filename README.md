@@ -28,7 +28,6 @@
 | Editor Engine    | Custom EditorDataModel(Linked List Approach)|
 | Caching          | Redis                                       |
 | Auth & Sharing   | Express-sessions                            |
-| State Management | useReducer, useContext                      |
 
 ---
 
