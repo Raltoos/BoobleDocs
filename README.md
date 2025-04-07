@@ -1,54 +1,60 @@
-# React + TypeScript + Vite
+# 📝 BoobleDocs — Real-time Collaborative Text Editor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**BoobleDocs** is a real-time collaborative text editor inspired by Google Docs — built from scratch using **React**, **Socket.IO**, **Node.js**, and a custom-built editor model written in typescript. It supports multiple users editing the same document simultaneously with intelligent cursor synchronization, access control, and live updates.
 
-Currently, two official plugins are available:
+> 🚀 "Built not just to work, but to wow."
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## Expanding the ESLint configuration
+- ⚡ **Real-time Collaboration** — Multiple users can co-edit documents with smooth, low-latency updates.
+- 🧠 **Custom EditorDataModel** — Our own data model built on Linked List Data Structure to handle conflict resolution, character-by-character edits, and user cursors.
+- 👥 **Live Cursor Tracking** — Each user’s cursor is uniquely colored and updated live across all clients.
+- 🔐 **Permission-Based Editing** — Only invited users with proper access can edit; others can view in real time.
+- 📤 **Shareable Document Links** — Easy sharing with one-click document access via links.
+- 💬 **Socket.IO Driven Events** — Fast and reliable communication using WebSockets.
+- 🖼️ **Responsive UI** — Beautiful, minimalistic design optimized for both desktop and mobile.
+- 🎥 **Demo Walkthrough** — (Video linked below)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## 🧩 Tech Stack
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+| Layer             | Tech Used                                  |
+|------------------|---------------------------------------------|
+| Frontend         | React.js, Tailwind CSS                      |
+| Realtime Comm.   | Socket.IO                                   |
+| Backend          | Node.js, Express                            |
+| Editor Engine    | Custom EditorDataModel(Linked List Approach)|
+| Caching          | Redis                                       |
+| Auth & Sharing   | Express-sessions                            |
+| State Management | useReducer, useContext                      |
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## 🧠 Challenges & Tricky Implementation
+
+Implementing **boobleDocs** was not just a coding task — it was a systems challenge:
+
+- ✍️ **Live Text Updates**: Building a custom `EditorDataModel` for managing concurrent edits without relying on third-party collaborative libraries.
+- 🎯 **User Cursors**: Synchronizing multiple user cursors in real time with live updates, animations, and dynamic color assignment.
+- 🔒 **Permission System**: Handling granular document permissions dynamically in a secure and scalable way.
+- 🧪 **Testing Collaboration**: Ensuring consistent sync across multiple tabs, devices, and flaky networks.
+- 🌐 **Socket Event Optimization**: Managing dozens of events without bottlenecks or data loss using effective debouncing and broadcasting strategies.
+
+This was a real test of architectural design, problem-solving, and async data handling!
+
+---
+
+## 📸 UI Screenshots
+
+| Dashboard View | Collaboration Live | Share Panel |
+|----------------|--------------------|-------------|
+|![Screenshot 2025-04-08 022030](https://github.com/user-attachments/assets/f33d8693-5102-4453-9a1f-4fe6962aba5e)|![Screenshot 2025-04-08 022151](https://github.com/user-attachments/assets/d5753e8b-a3db-4556-91e3-4453dcda0b1e)| ![Screenshot 2025-04-08 030454](https://github.com/user-attachments/assets/31d7c5ff-7e9a-4ee8-bc11-988172fd1d3d)
+
+
+---
+
+## 🎥 Demo Video
+
+https://github.com/user-attachments/assets/bf3a861f-125d-4d94-a99c-9e60c6b838a7
