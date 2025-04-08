@@ -270,7 +270,6 @@ export class EditorDataModel {
     this.cursor_position = targetLineStart + targetOffset;
   }
 
-  // Move cursor down one line
   moveCursorDown(): void {
     // Find current line
     let currentLineIndex = 0;

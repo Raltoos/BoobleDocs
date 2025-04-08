@@ -309,7 +309,6 @@ router.post("/:id/share", isAuthenticated, checkDocumentPermission, isAdmin, asy
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Use update operators to update the permission document or insert a new one if not found
         const permission = await Permission.findOneAndUpdate(
             { docId: documentId, userId: targetUser.userId },
             {
@@ -319,9 +318,7 @@ router.post("/:id/share", isAuthenticated, checkDocumentPermission, isAdmin, asy
             { upsert: true, new: true }
         );
 
-        // Update Redis permission cache
         await redisClient.hSet(`perm:${documentId}:${targetUser.userId}`, { access });
-        // Invalidate documents list cache for the target user
         await redisClient.del(`documents:user:${targetUser.userId}`);
 
         res.json({ 
@@ -336,28 +333,23 @@ router.post("/:id/share", isAuthenticated, checkDocumentPermission, isAdmin, asy
 });
 
 
-// Update document title or content
 router.put("/:id", isAuthenticated, checkDocumentPermission, async (req, res) => {
     try {
         const documentId = req.params.id;
         const { content, title } = req.body;
 
-        // Check if user has write or admin access
         if (req.userPermission === 'read') {
             return res.status(403).json({ message: 'You do not have permission to edit this document' });
         }
 
-        // Title can only be changed by admin
         if (title !== undefined && req.userPermission !== 'admin') {
             return res.status(403).json({ message: 'Only admins can change document title' });
         }
 
-        // Prepare update data
         const updateData = { updatedAt: new Date() };
         if (content !== undefined) updateData.content = content;
         if (title !== undefined && req.userPermission === 'admin') updateData.title = title;
 
-        // Update document in MongoDB
         const updatedDoc = await Document.findOneAndUpdate(
             { docId: documentId },
             updateData,
@@ -368,7 +360,6 @@ router.put("/:id", isAuthenticated, checkDocumentPermission, async (req, res) =>
             return res.status(404).json({ message: 'Document not found' });
         }
 
-        // Update document in Redis
         const redisUpdateData = {
             updatedAt: updateData.updatedAt.getTime()
         };
@@ -388,12 +379,10 @@ router.put("/:id", isAuthenticated, checkDocumentPermission, async (req, res) =>
     }
 });
 
-// Delete document
 router.delete("/:id", isAuthenticated, checkDocumentPermission, isAdmin, async (req, res) => {
     try {
         const documentId = req.params.id;
 
-        // Get all users who had access to this document
         const permissions = await Permission.find({ docId: documentId });
         const userIds = permissions.map(perm => perm.userId);
 
@@ -406,7 +395,7 @@ router.delete("/:id", isAuthenticated, checkDocumentPermission, isAdmin, async (
         // Delete document from Redis
         await redisClient.del(`doc:${documentId}`);
 
-        // Delete all permissions from Redis and invalidate user document lists
+        // Delete all permissions from Redis
         for (const userId of userIds) {
             await redisClient.del(`perm:${documentId}:${userId}`);
             await redisClient.del(`documents:user:${userId}`);

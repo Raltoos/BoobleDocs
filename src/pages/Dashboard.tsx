@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import DashHeader from "../components/DashHeader";
 import DotOptions from "../components/DotOptions";
 import { useNavigate } from "react-router-dom";
 
